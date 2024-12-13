@@ -1,8 +1,12 @@
 {
-  "name": "vscopyforai",
-  "displayName": "VsCopyForAi",
+  "name": "CopyAsContext",
+  "displayName": "CopyAsContext",
   "description": "",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/20twenty/CopyAsContext.git"
+  },
   "engines": {
     "vscode": "^1.45.0"
   },
@@ -15,7 +19,7 @@
     "commands": [
       {
         "command": "extension.copySelectedFilePathsAndContents",
-        "title": "Copy Selected File Paths and Contents"
+        "title": "Copy As Context"
       }
     ],
     "menus": {
@@ -48,3 +52,4 @@
     "vsce": "^2.15.0"
   }
 }
+

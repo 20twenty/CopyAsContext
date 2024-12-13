@@ -28,7 +28,10 @@ export function activate(context: vscode.ExtensionContext) {
               const fileContent = await vscode.workspace.fs.readFile(fileUri);
               const fileContentStr = Buffer.from(fileContent).toString('utf-8');
 
-              return `### ${filePath}\n\n\`\`\`${languageId}\n${fileContentStr}\n\`\`\`\n`;
+              // output as markdown
+              const asMarkdown = `### ${filePath}\n\n\`\`\`${languageId}\n${fileContentStr}\n\`\`\`\n`;
+              const asText = `---\n${filePath}\n---\n${fileContentStr}\n---\n`;
+              return asText;
             } catch (error) {
               errorFiles.push(filePath);
               return '';
