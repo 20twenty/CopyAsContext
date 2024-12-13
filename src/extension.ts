@@ -49,7 +49,7 @@ export function activate(context: vscode.ExtensionContext) {
         // Copy to clipboard
         const clipboardText = clipboardContent.filter(Boolean).join('\n');
         await vscode.env.clipboard.writeText(clipboardText);
-        vscode.window.showInformationMessage('File paths and contents copied to clipboard in Markdown format.');
+        vscode.window.showInformationMessage('File paths and contents copied to clipboard.');
       } catch (error) {
         vscode.window.showErrorMessage(`Error: ${error}`);
       }
