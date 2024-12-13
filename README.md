@@ -37,7 +37,7 @@ A Visual Studio Code extension that allows you to quickly copy the file paths an
 
 **Clipboard Output (truncated):**
 
-```markdown
+````markdown
 ### /path/to/project/src/extension.ts
 
 ```typescript
@@ -63,7 +63,7 @@ A Visual Studio Code extension that allows you to quickly copy the file paths an
 # Contributing
 ...
 ```
-```
+````
 
 ## Requirements
 
