@@ -27,7 +27,22 @@ A Visual Studio Code extension that allows you to quickly copy the file paths an
 3. **Paste the Result:**  
    Your clipboard will now contain the absolute paths and contents of the selected files and directories. Paste it wherever you need.
 
-## Example Output
+## Settings
+
+### Output Format
+
+The extension provides an option to change the output format of the copied content. There are two options available:
+
+- **text** (default): Suitable for general use.
+- **markdown**: May work better when working only with code files.
+
+To change the setting:
+
+1. Press `Cmd + ,` (on macOS) or `Ctrl + ,` (on Windows/Linux) to open the settings.
+2. Search for **"Copy As Context"**.
+3. Adjust the **Output Format** setting as desired.
+
+## Example Output (text)
 
 **Selected:**
 - `src/extension.ts`

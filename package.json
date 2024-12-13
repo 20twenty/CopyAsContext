@@ -1,6 +1,7 @@
 {
   "name": "CopyAsContext",
-  "displayName": "CopyAsContext",
+  "displayName": "Copy As Context",
+  "publisher": "20twenty",
   "description": "",
   "version": "0.0.1",
   "repository": {
@@ -18,17 +19,45 @@
   "contributes": {
     "commands": [
       {
-        "command": "extension.copySelectedFilePathsAndContents",
+        "command": "extension.copyAsContext",
         "title": "Copy As Context"
+      },
+      {
+        "command": "extension.copyAsContext.text",
+        "title": "Copy As Context (text)"
+      },
+      {
+        "command": "extension.copyAsContext.markdown",
+        "title": "Copy As Context (markdown)"
       }
     ],
     "menus": {
       "explorer/context": [
         {
-          "command": "extension.copySelectedFilePathsAndContents",
+          "command": "extension.copyAsContext",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.copyAsContext.text",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.copyAsContext.markdown",
           "group": "navigation"
         }
       ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "CopyAsContext Settings",
+      "properties": {
+        "CopyAsContext.outputFormat": {
+          "type": "string",
+          "enum": ["text", "markdown"],
+          "default": "text",
+          "description": "Choose the default output format for the 'Copy As Context' command."
+        }
+      }
     }
   },
   "scripts": {
@@ -52,4 +81,3 @@
     "vsce": "^2.15.0"
   }
 }
-

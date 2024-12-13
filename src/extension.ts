@@ -1,70 +1,92 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 
+type Type = 'markdown' | 'text';
+
 export function activate(context: vscode.ExtensionContext) {
-  const copySelectedFilePathsAndContents = vscode.commands.registerCommand(
-    'extension.copySelectedFilePathsAndContents',
+  const copyAsContext = vscode.commands.registerCommand(
+    'extension.copyAsContext',
     async (uri: vscode.Uri, selectedUris: vscode.Uri[]) => {
-      if (!selectedUris || selectedUris.length === 0) {
-        vscode.window.showInformationMessage('No files or directories selected in File Explorer.');
-        return;
-      }
-
-      try {
-        const fileUris = await getAllFilesInDirectories(selectedUris);
-
-        if (fileUris.length === 0) {
-          vscode.window.showInformationMessage('No files found in the selected items.');
-          return;
-        }
-
-        const errorFiles: string[] = [];
-        const clipboardContent = await Promise.all(
-          fileUris.map(async (fileUri) => {
-            const filePath = fileUri.fsPath;
-            const languageId = await getLanguageId(fileUri);
-
-            try {
-              const fileContent = await vscode.workspace.fs.readFile(fileUri);
-              const fileContentStr = Buffer.from(fileContent).toString('utf-8');
-
-              // output as markdown
-              const asMarkdown = `### ${filePath}\n\n\`\`\`${languageId}\n${fileContentStr}\n\`\`\`\n`;
-              const asText = `---\n${filePath}\n---\n${fileContentStr}\n---\n`;
-              return asText;
-            } catch (error) {
-              errorFiles.push(filePath);
-              return '';
-            }
-          })
-        );
-
-        // Notify the user about files that could not be processed
-        if (errorFiles.length > 0) {
-          vscode.window.showWarningMessage(
-            `Some files could not be processed: ${errorFiles.join(', ')}`
-          );
-        }
-
-        // Copy to clipboard
-        const clipboardText = clipboardContent.filter(Boolean).join('\n');
-        await vscode.env.clipboard.writeText(clipboardText);
-        vscode.window.showInformationMessage('File paths and contents copied to clipboard.');
-      } catch (error) {
-        vscode.window.showErrorMessage(`Error: ${error}`);
-      }
+      const config = vscode.workspace.getConfiguration('CopyAsContext');
+      const defaultFormat = config.get<Type>('outputFormat', 'text');
+      await handleCopyAsContext(uri, selectedUris, defaultFormat);
     }
   );
 
-  context.subscriptions.push(copySelectedFilePathsAndContents);
+  const copyAsContextText = vscode.commands.registerCommand(
+    'extension.copyAsContext.text',
+    async (uri: vscode.Uri, selectedUris: vscode.Uri[]) => {
+      await handleCopyAsContext(uri, selectedUris, 'text');
+    }
+  );
+
+  const copyAsContextMarkdown = vscode.commands.registerCommand(
+    'extension.copyAsContext.markdown',
+    async (uri: vscode.Uri, selectedUris: vscode.Uri[]) => {
+      await handleCopyAsContext(uri, selectedUris, 'markdown');
+    }
+  );
+
+  context.subscriptions.push(copyAsContext, copyAsContextText, copyAsContextMarkdown);
 }
 
 export function deactivate() {}
 
-/**
- * Recursively retrieves all file URIs from the given URIs.
- * If a URI is a directory, it will recursively read its contents.
- */
+async function handleCopyAsContext(
+  uri: vscode.Uri,
+  selectedUris: vscode.Uri[],
+  outputFormat: Type
+) {
+  if (!selectedUris || selectedUris.length === 0) {
+    vscode.window.showInformationMessage('No files or directories selected in File Explorer.');
+    return;
+  }
+
+  try {
+    const fileUris = await getAllFilesInDirectories(selectedUris);
+
+    if (fileUris.length === 0) {
+      vscode.window.showInformationMessage('No files found in the selected items.');
+      return;
+    }
+
+    const errorFiles: string[] = [];
+    const clipboardContent = await Promise.all(
+      fileUris.map(async (fileUri) => {
+        const filePath = fileUri.fsPath;
+        const languageId = await getLanguageId(fileUri);
+
+        try {
+          const fileContent = await vscode.workspace.fs.readFile(fileUri);
+          const fileContentStr = Buffer.from(fileContent).toString('utf-8');
+
+          const asMarkdown = `### ${filePath}\n\n\`\`\`${languageId}\n${fileContentStr}\n\`\`\`\n`;
+          const asText = `---\n${filePath}\n---\n${fileContentStr}\n---\n`;
+
+          return outputFormat === 'markdown' ? asMarkdown : asText;
+        } catch (error) {
+          errorFiles.push(filePath);
+          return '';
+        }
+      })
+    );
+
+    // Notify the user about files that could not be processed
+    if (errorFiles.length > 0) {
+      vscode.window.showWarningMessage(
+        `Some files could not be processed: ${errorFiles.join(', ')}`
+      );
+    }
+
+    // Copy to clipboard
+    const clipboardText = clipboardContent.filter(Boolean).join('\n');
+    await vscode.env.clipboard.writeText(clipboardText);
+    vscode.window.showInformationMessage(`File paths and contents copied as ${outputFormat}.`);
+  } catch (error) {
+    vscode.window.showErrorMessage(`Error: ${error}`);
+  }
+}
+
 async function getAllFilesInDirectories(uris: vscode.Uri[]): Promise<vscode.Uri[]> {
   const files: vscode.Uri[] = [];
 
@@ -72,10 +94,8 @@ async function getAllFilesInDirectories(uris: vscode.Uri[]): Promise<vscode.Uri[
     const fileStat = await vscode.workspace.fs.stat(uri);
 
     if (fileStat.type === vscode.FileType.File) {
-      // It's a file, just add it to the list
       files.push(uri);
     } else if (fileStat.type === vscode.FileType.Directory) {
-      // It's a directory, read its contents recursively
       const dirFiles = await getFilesRecursively(uri);
       files.push(...dirFiles);
     }
@@ -101,10 +121,6 @@ async function getFilesRecursively(dirUri: vscode.Uri): Promise<vscode.Uri[]> {
   return files;
 }
 
-/**
- * Detects the language ID of a file based on VS Code's language detection.
- * Falls back to 'plaintext' if detection fails.
- */
 async function getLanguageId(uri: vscode.Uri): Promise<string> {
   try {
     const document = await vscode.workspace.openTextDocument(uri);
